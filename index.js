@@ -34,9 +34,12 @@ app.use('/api/v1/auth', AuthController);
 app.use('/api/v1/user', verifyToken, UserRoutes);
 app.use('/api/v1/appointments', verifyToken, AppointmenRoutes);
 app.use('/api/v1/meeting', MeetingRoutes);
-app.get('/', (req, res)=>res.status(201).json({response:'System status 200'}));
+app.get('/', (req, res)=>res.status(201).json({response:'Hey this is my API running 🥳'}));
 app.use(errorHandler);
 
 server.listen(PORT, "0.0.0.0", () => {
-    console.log(`connected at port ${PORT}`);
-  });
+  console.log(`connected at port ${PORT}`);
+});
+// server.listen(PORT, "0.0.0.0", () => {
+//     console.log(`connected at port ${PORT}`);
+//   });
