@@ -29,10 +29,13 @@ async function startMeeting(params, callback) {
 
 
 async function joinMeeting(params, callback) {
-    const meetingUserModel = new meetingUser(params);
-    meetingUserModel
+    //console.log(params)
+    const meetingUserModel = await new meetingUser(params);
+   // console.log(meetingUserModel)
+   await  meetingUserModel
         .save()
         .then(async(response) => {
+           // console.log('present findOneAndUpdate')
             await meeting.findOneAndUpdate({ id: params.meetingId }, {
                 $addToSet: { "meetingUsers": meetingUserModel }
 
@@ -41,6 +44,8 @@ async function joinMeeting(params, callback) {
         })
         .catch((error) => { return callback(error); });
 }
+
+
 async function isMeetingPresent(meetingId, callback) {
     meeting.findById(meetingId)
         .populate("meetingUsers", "MeetingUser")

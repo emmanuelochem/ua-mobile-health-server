@@ -3,24 +3,24 @@ const meetingServices = require('../services/meeting-service');
 const { MeetingPayloadEnum } = require('../utils/meeting-payload.enum');
 
 
-async function joinMeeting(meetingId, socket, payload, meetingServer) {
-    const { userId, name } = payload;
-    meetingServices.isMeetingPresent(meetingId, async(error, results) => {
+async function joinMeeting(meetingId, socket, meetingServer, payload) {
+   
+    await meetingServices.isMeetingPresent(meetingId, async(error, results) => {
         if (error && !results) {
             sendMessage(socket, {
                 type: MeetingPayloadEnum.NOT_FOUND
             });
-
         }
 
-        if (results) {
-            addUser(socket, { meetingId, userId, name }).then((result) => {
+        if (results){
+            const { userId, name } = payload.data;
+      
+           await addUser(socket, { meetingId, userId, name }).then((result) => {
                 if (result) {
                     sendMessage(socket, {
                         type: MeetingPayloadEnum.JOINED_MEETING,
                         data: {
                             userId
-
                         }
                     });
                     broadcastUsers(meetingId, socket, meetingServer, {
@@ -39,6 +39,57 @@ async function joinMeeting(meetingId, socket, payload, meetingServer) {
     });
 }
 
+
+function addUser(socket, { meetingId, userId, name }) {
+    let promise = new Promise(async function(resolve, reject) {
+       return  await meetingServices.getMeetingUser({ meetingId, userId }, (error, results) => {
+            if (!results) {
+
+                var model = {
+                    socketId: socket.id,
+                    meetingId: meetingId,
+                    userId: userId,
+                    joined: true,
+                    name: name,
+                    isAlive: true
+
+                };
+                meetingServices.joinMeeting(model, (error, results) => {
+                    if (results) {
+                       return resolve(true);
+
+                    }
+                    if (error) {
+                        return reject(error);
+                    }
+                });
+            } else {
+                meetingServices.updateMeetingUser({
+                    userId: userId,
+                    socketId: socket.id,
+
+                }, (error, results) => {
+                    if (results) {
+                        return   resolve(true);
+                    }
+                    if (error) {return reject(error); }
+                });
+            }
+        });
+    });
+    return promise;
+
+}
+
+function sendMessage(socket, payload) {
+    socket.send(JSON.stringify(payload));
+
+}
+
+
+function broadcastUsers(meetingId, socket, meetingServer, payload) {
+    socket.broadcast.emit("message", JSON.stringify(payload));
+}
 
 function forwardConnectionRequest(meetingId, socket, meetingServer, payload) {
     const { userId, otherUserId, name } = payload.data;
@@ -168,56 +219,7 @@ function forwardEvent(meetingId, socket, meetingServer, payload) {
 }
 
 
-function addUser(socket, { meetingId, userId, name }) {
-    let promise = new Promise(function(resolve, reject) {
-        meetingServices.getMeetingUser({ meetingId, userId }, (error, results) => {
-            if (!results) {
 
-                var model = {
-                    socketId: socket.id,
-                    meetingId: meetingId,
-                    userId: userId,
-                    joined: true,
-                    name: name,
-                    isAlive: true
-
-                };
-                meetingServices.joinMeeting(model, (error, results) => {
-                    if (results) {
-                        resolve(true);
-
-                    }
-                    if (error) {
-                        reject(error);
-                    }
-                });
-            } else {
-                meetingServices.updateMeetingUser({
-                    userId: userId,
-                    socketId: socket.id,
-
-                }, (error, results) => {
-                    if (results) {
-                        resolve(true);
-                    }
-                    if (error) { reject(error); }
-                });
-            }
-        });
-    });
-    return promise;
-
-}
-
-function sendMessage(socket, payload) {
-    socket.send(JSON.stringify(payload));
-
-}
-
-
-function broadcastUsers(meetingId, socket, meetingServer, payload) {
-    socket.broadcast.emit("message", JSON.stringify(payload));
-}
 
 
 

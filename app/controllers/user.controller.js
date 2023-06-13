@@ -76,8 +76,10 @@ const userData = asyncHandler(async (userID) => {
     var data = new Object();
      const profile = await User.findById(userID);
      const appointments = await Appointment.find({$or: [{student: profile._id}, {doctor: profile._id}]}).populate('student doctor');
+     const upcoming = await Appointment.find({status: 'pending', $or: [{student: profile._id}, {doctor: profile._id}]}).populate('student doctor');
      data['profile']= profile;
      data['appointments']= appointments;
+     data['upcoming']= upcoming;
     return  data;
     } catch (error) {
     return error.message;
