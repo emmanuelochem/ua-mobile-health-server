@@ -37,7 +37,7 @@ app.use('/api/v1/meeting', MeetingRoutes);
 app.get('/', (req, res)=>res.status(201).json({response:'Hey this is my API running 🥳'}));
 app.use(errorHandler);
 
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, () => {
   console.log(`connected at port ${PORT}`);
 });
 // server.listen(PORT, "0.0.0.0", () => {
