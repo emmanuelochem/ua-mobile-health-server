@@ -1,7 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const Appointment = require('../models/appointment.model');
 const User = require('../models/user.model');
-const uploadService = require('../utils/s3_uploader')
+const uploadService = require('../utils/s3_uploader');
+const reviewModel = require('../models/review.model');
+const userController = require("../controllers/user.controller");
+const recordsModel = require('../models/records.model');
 
 
 
@@ -162,6 +165,137 @@ const updateUser = asyncHandler(async (req, res) => {
       }
       );
 })
+ 
+const likeUnlike = asyncHandler( async(req, res) => {
+    try {
+        const currentUserId = req.auth_id
+        const user = await User.findById(req.params.id)
+
+        // if the user has already liked the post, remove it.
+        // Otherwise, add him into the likes array
+        if(user.likes.includes(currentUserId)){
+            user.likes = user.likes.filter((id) => id !== currentUserId)
+           await user.save()
+           return res.status(200).json({
+            status: `success`,
+            message: `Successfully unliked the user`,
+            data:user
+        });
+        } else {
+           user.likes.push(currentUserId)
+           await user.save()
+           return res.status(200).json({
+            status: `success`,
+            message: `Successfully liked the user`,
+            data:user
+        });
+        }
+    } catch (error) {
+        return res.status(500).json(error.message) 
+    }
+})
+
+const createReview = asyncHandler(async (req, res) => {
+   
+   
+    try {
+    //   const reviewExist = await reviewModel.find();
+    //  if(reviewExist.length > 0){
+    //   return res.status(400).json({
+    //       status: `error`,
+    //       message: `You have already  made a review`,
+    //       reviewExist
+    //   });
+    //  }
+  
+      const review = new reviewModel({
+          student: req.auth_id, doctor: req.body.doctor, rating: req.body.rating, message: req.body.message,
+        })
+         await review.save();
+         const review_data = await reviewModel.findById(review._id).populate("student");
+         const user_data = await userData(req.auth_id);
+         return res.status(201).json({
+              status: `success`,
+              message: `Review made.`,
+              data:review_data,
+             userData:user_data
+          });
+    } catch (error) {
+        const user_data = await userData(req.auth_id);
+      res.status(201).json({
+          status: `failed`,
+          message: `Unable to make review.`,
+          data: null,
+          userData:user_data
+      });
+    }
+  })
+
+  const getReview = asyncHandler(async (req, res) => {
+    try {
+         const reviewExist = await reviewModel.find({doctor: req.params.id}).populate("student");
+         //const user_data = await userData(req.auth_id);
+         return res.status(200).json({
+              status: `success`,
+              message: `Review retrieved.`,
+              data:reviewExist,
+            // userData:user_data
+          });
+    } catch (error) {
+        //const user_data = await userData(req.auth_id);
+      res.status(201).json({
+          status: `failed`,
+          message: `Unable to fetch reviews.`,
+          data: null,
+         // userData:user_data
+      });
+    }
+  })
+
+
+
+  const createRecord = asyncHandler(async (req, res) => {
+   
+   
+    try {
+    //   const reviewExist = await reviewModel.find();
+    //  if(reviewExist.length > 0){
+    //   return res.status(400).json({
+    //       status: `error`,
+    //       message: `You have already  made a review`,
+    //       reviewExist
+    //   });
+    //  }
+      const review = new recordsModel({
+                doctor: req.auth_id,
+                student: req.body.student,
+                appointment: req.body.appointment,
+                title: req.body.title,
+                body: req.body.body,
+        })
+         await review.save();
+         const review_data = await recordsModel.findById(review._id).populate("student doctor");
+         const user_data = await userData(req.auth_id);
+         return res.status(201).json({
+              status: `success`,
+              message: `Record successfully created.`,
+              data:review_data,
+             userData:user_data
+          });
+    } catch (error) {
+        const user_data = await userData(req.auth_id);
+      res.status(201).json({
+          status: `failed`,
+          message: `Unable to create record.`,
+          data: error.message,
+          userData:user_data
+      });
+    }
+  })
+
+
+
+
 
 module.exports = {
     getAllStudents,
@@ -171,5 +305,9 @@ module.exports = {
     updateUser,
     deleteUser,
     updateProfile,
-    userData
+    userData,
+    likeUnlike,
+    createReview,
+    getReview,
+    createRecord
 };

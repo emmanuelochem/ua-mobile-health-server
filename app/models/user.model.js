@@ -78,7 +78,10 @@ const doctorSchema = mongoose.Schema(
         required: false,
         max: 5000,
     },
-    
+    likes: {
+        type: [String],
+        default: [],
+    },
     },
     {
         timestamps: true
