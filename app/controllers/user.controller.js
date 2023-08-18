@@ -255,22 +255,13 @@ const createReview = asyncHandler(async (req, res) => {
 
 
   const createRecord = asyncHandler(async (req, res) => {
-   
-   
     try {
-    //   const reviewExist = await reviewModel.find();
-    //  if(reviewExist.length > 0){
-    //   return res.status(400).json({
-    //       status: `error`,
-    //       message: `You have already  made a review`,
-    //       reviewExist
-    //   });
-    //  }
       const review = new recordsModel({
                 doctor: req.auth_id,
                 student: req.body.student,
                 appointment: req.body.appointment,
                 title: req.body.title,
+                date: req.body.date,
                 body: req.body.body,
         })
          await review.save();
@@ -293,9 +284,94 @@ const createReview = asyncHandler(async (req, res) => {
     }
   })
 
+  const getRecords = asyncHandler(async (req, res) => {
+    try {
+         const reviewExist = await recordsModel.find({student: req.params.id}).populate("student");
+         //const user_data = await userData(req.auth_id);
+         return res.status(200).json({
+              status: `success`,
+              message: `Records retrieved.`,
+              data:reviewExist,
+            // userData:user_data
+          });
+    } catch (error) {
+        //const user_data = await userData(req.auth_id);
+      res.status(201).json({
+          status: `failed`,
+          message: `Unable to fetch records.`,
+          data: null,
+         // userData:user_data
+      });
+    }
+  })
+
+  const deleteRecords = asyncHandler(async (req, res) => {
+    try {
+         const record = await recordsModel.findByIdAndDelete(id);
+         //const user_data = await userData(req.auth_id);
+         return res.status(200).json({
+              status: `success`,
+              message: `Records retrieved.`,
+              data:[],
+            // userData:user_data
+          });
+    } catch (error) {
+        //const user_data = await userData(req.auth_id);
+      res.status(201).json({
+          status: `failed`,
+          message: `Unable to fetch records.`,
+          data: null,
+         // userData:user_data
+      });
+    }
+  })
 
 
 
+  const updateRecord = asyncHandler(async (req, res, next) => {
+          try {
+          const record = await recordsModel.findByIdAndUpdate(req.auth_id, {
+            $set: {
+                date:req.body.date, 
+               colorId:req.body.colorId, 
+               title:req.body.title, 
+               body:req.body.body, 
+             }
+    }, {new:true});
+          const user_data = await userData(req.auth_id);
+          return res.status(200).json({
+              status: `success`,
+              message: `Record updated successfilly`,
+              data: date,
+              userData: user_data,
+          });
+      } catch (error) {
+          return res.status(401).json({
+              status: `failed`,
+              message: `An error occured`,
+              data: error.message,
+          });
+      }
+ 
+  
+})
+
+
+    // async getUsersWhereNot(userId) {
+    //     return await User.find({ _id: { $ne: ObjectId(userId) } });
+    // }
+
+    // async getUserByName(myId, name) {
+    //     return await User.find({
+    //         _id: { $ne: ObjectId(myId), name }
+    //     });
+    // }
+
+    // async saveUserFcmToken(userId, fcmToken) {
+    //     return await User.updateOne({ _id: ObjectId(userId) }, {
+    //         fcmToken
+    //     });
+    // }
 
 module.exports = {
     getAllStudents,
@@ -309,5 +385,7 @@ module.exports = {
     likeUnlike,
     createReview,
     getReview,
-    createRecord
+    createRecord,
+    getRecords,
+    deleteRecords,updateRecord
 };

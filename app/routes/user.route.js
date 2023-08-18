@@ -32,10 +32,12 @@ router.route('/review/:id')
         .delete(userController.createReview)
 
 router.route('/record/:id')
-        .get(userController.createRecord)
+        .get(userController.getRecords)
 router.route('/record')
         .put(userController.createRecord)
 router.route('/record/:id')
-        .delete(userController.createRecord)
+        .post(userController.updateRecord)
+router.route('/record/:id')
+        .delete(userController.deleteRecords)
 
 module.exports = router;

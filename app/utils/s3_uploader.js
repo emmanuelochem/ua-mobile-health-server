@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
+require("aws-sdk/lib/maintenance_mode_message").suppress = true;
 
 // Set up AWS configuration
 AWS.config.update({

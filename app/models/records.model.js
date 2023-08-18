@@ -13,6 +13,14 @@ const recordsSchema = mongoose.Schema(
         type: String,
         required: true,
     },
+    date: {
+        type: String,
+        required: true,
+    },
+    colorId: {
+        type: String,
+        required: true,
+    },
     },
     {
         timestamps: true
